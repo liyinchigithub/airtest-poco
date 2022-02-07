@@ -19,9 +19,9 @@ pip install poco
 ```shell
 pip install airtest
 ```
-### 集成SDK
+### 集成Poco-SDK
 
-把sdk集成到游戏里请参考 [Integration Guide](https://poco.readthedocs.io/en/latest/source/doc/integration.html)
+把poco-sdk集成到到公司产品中游戏里请参考[Integration Guide](https://poco.readthedocs.io/en/latest/source/doc/integration.html)
 
 ![image](https://user-images.githubusercontent.com/19643260/152683375-7af7bff9-310a-4a3c-9a03-13ea506e0a54.png)
 
@@ -35,26 +35,45 @@ pip install airtest
 
 ## 初始化
 
+* 切换Airtest IDE poco辅助窗口模式自动插入的初始化语句
+
 ### Android原生
+```shell
+from poco.drivers.android.uiautomation import AndroidUiautomationPoco# 导入poco 
+poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=False)
+```
 
 ### iOS原生
-
-### Android游戏原生
-
-### iOS游戏原生
+```shell
+from poco.drivers.ios import iosPoco
+poco = iosPoco()
+```
 
 ### Unity3D
 ```python
-# coding=utf-8
 from poco.drivers.unity3d import UnityPoco
 poco = UnityPoco()
 ```
 
-### 
+### UE4
 ```python
-# coding=utf-8
-
+from poco.drivers.ue4 import UE4Poco
+poco = UE4Poco()
 ```
+
+### cocos2dx-lua
+```python
+from poco.drivers.std import StdPoco
+poco = StdPoco()
+```
+
+### cocos2dx-js
+```python
+from poco.drivers.cocosjs import CocosJsPoco
+poco = CocosJsPoco()
+```
+
+![image](https://user-images.githubusercontent.com/19643260/152731956-57d1182e-db25-4431-a653-f0164641e281.png)
 
 
 ## 常用操作
