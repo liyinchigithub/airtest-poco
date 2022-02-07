@@ -19,6 +19,11 @@ pip install poco
 ```shell
 pip install airtest
 ```
+
+```shell
+pip install pocounit
+```
+
 ### 集成Poco-SDK
 
 把poco-sdk集成到到公司产品中游戏里请参考[Integration Guide](https://poco.readthedocs.io/en/latest/source/doc/integration.html)
@@ -90,6 +95,14 @@ poco("android.widget.TextView").click()
 poco([0.5, 0.5]).click()
 ```
 
+```python
+poco('bg_mission').click()
+poco('bg_mission').click('center')
+poco('bg_mission').click([0.5, 0.5])    # equivalent to center 默认最左上角是0,0 横纵是1,1
+poco('bg_mission').focus([0.5, 0.5]).click()  # equivalent to above expression
+```
+![image](https://user-images.githubusercontent.com/19643260/152797857-3bf71e3d-ab80-4fc8-be42-7a64c9121919.png)
+
 ### 长按
 ```python
 poco('star_single').long_click()
@@ -128,6 +141,7 @@ if poco(text="账号密码登录").exists():
 ```
 
 assert_exists(Template(r"tpl1644214986329.png", record_pos=(-0.108, -0.476), resolution=(1440, 2960)), "请填写测试点")
+
 ### 获取屏幕大小
 ```python
 screen_size=poco.get_screen_size()
@@ -151,6 +165,26 @@ poco.swipe(point_a, direction=direction)
 
 ```
 
+```python
+# 起点
+joystick = poco('movetouch_panel').child('point_img')
+joystick.swipe('up')# 上滑
+joystick.swipe([0.2, -0.2])  # swipe sqrt(0.08) unit distance at 45 degree angle up-and-right
+joystick.swipe([0.2, -0.2], duration=0.5)
+```
+![image](https://user-images.githubusercontent.com/19643260/152798123-9794230d-5100-4518-b0f2-cdb6f123448a.png)
+
+### 拖拽
+
+与swipe不同的是，darg是从一个UI拖到另一个UI，而swipe是将一个UI朝某个方向拖动。
+
+下面例子展示如何使用 drag_to 方法
+
+```python
+poco(text='突破芯片').drag_to(poco(text='岩石司康饼'))
+```
+![image](https://user-images.githubusercontent.com/19643260/152798594-9de39359-5549-497b-9d9b-80c9f6f4a866.png)
+
 ### 日志引入
 ```python
 import logging
@@ -161,8 +195,14 @@ logger.setLevel(logging.INFO)
 logger.info("登录成功")
 ```
 
-### 截图
+### 截图截屏幕并以base64编码返回。
+
+截图的格式(png, jpg, …)由对应的sdk实现决定，大多数情况下是png。详见 ScreenInterface.getScreen
+
+Note: snapshot is not supported in some engine implementation of poco.
+
 ```python
+from base64 import b64decode
 b64img, fmt = poco.snapshot(width=720)
 open('screen.{}'.format(fmt), 'wb').write(b64decode(b64img))
 ```
@@ -172,6 +212,15 @@ open('screen.{}'.format(fmt), 'wb').write(b64decode(b64img))
 poco.device..wake()
 ```
 
+
+### 等待出现(wait)
+在给定时间内等待一个UI出现并返回这个UI，如果已经存在画面中了那就直接返回这个UI。
+如果超时了还没有出现，同样也会返回，但是调用这个UI的操作时会报错。
+类似的操作还有，见 wait_for_appearance
+```python
+poco('bg_mission').wait(5).click()  # wait 5 seconds at most，click once the object appears
+poco('bg_mission').wait(5).exists()  # wait 5 seconds at most，return Exists or Not Exists
+```
 
 ## 注意事项：
 
@@ -463,9 +512,118 @@ assert_not_equal("实际值", "预测值", "请填写测试点.")
 ```
 
 
-### 11.
+### 11.正则表达式
+```python
+poco(textMatches='^据点.*$', type='Button', enable=True)
+```
+![image](https://user-images.githubusercontent.com/19643260/152796094-9dda5e86-b513-49d3-b01f-c0aab2fd507b.png)
 
 
-### 12.
+### 12.相对选择器(Relative Selector)
+直接用节点属性没法选出你所想要的UI时，还可以通过UI之间的渲染层级关系进行选择，例如父子关系、兄弟关系、祖先后代关系。
+
+```python
+# select by direct child/offspring
+poco('main_node').child('list_item').offspring('item')
+```
+![image](https://user-images.githubusercontent.com/19643260/152796353-ab2673b4-e895-406a-a25f-da660bde1a91.png)
 
 
+### 13.空间顺序选择器(Sequence Selector)
+
+按照序号(顺序)进行选择总是按照空间排布顺序，先从左往右，再像之前那样一行一行从上到下，如下图中的数字标号，就是索引选择的序号。索引选择有个特例，一旦进行选择后，如果UI的位置发生了变化，那么下标序号仍然是按照选择的那一瞬间所确定的值。即，如果选择时1号UI现在去到了6号的位置，那么还是要用 poco(...)[1] 来访问，而不是6.如果选择了之后，某个UI消失了(从界面中移除或者隐藏了)，那么如果再访问那个UI则可能会发生异常，其余的UI仍可继续访问。
+
+```python
+items = poco('main_node').child('list_item').offspring('item')
+print(items[0].child('material_name').get_text())
+print(items[1].child('material_name').get_text())
+```
+
+### 14.迭代一组对象(Iterate over a collection of objects)
+
+下面代码片段展示如何迭代遍历一组UI
+
+```python
+items = poco('main_node').child('list_item').offspring('item') # child 子 offspring 子的子
+for item in items:
+    item.child('icn_item')
+```
+![image](https://user-images.githubusercontent.com/19643260/152797511-a9c815d5-15e2-4714-93fd-65629be94778.png)
+
+### 15.读取属性(Get object properties)
+
+下面的例子展示如何通过代码获取UI的各种属性
+
+
+```python
+mission_btn = poco('bg_mission')
+print(mission_btn.attr('type'))  # 'Button'
+print(mission_btn.get_text())  # '据点支援'
+print(mission_btn.attr('text'))  # '据点支援' equivalent to .get_text()
+print(mission_btn.exists())  # True/False, exists in the screen or not
+```
+
+### 16.局部定位(focus (local positioning))
+所有UI相关的操作都默认以UI的 anchorPoint 为操作点，如果想自定义一个点那么可以使用 focus 方法。
+调用此方法将返回 新的 设置了默认 焦点 的UI，重复调用则以最后一次所调用的为准。
+focus 所使用的是局部坐标系，因此同样是UI包围盒的左上角为原点，x轴向右，y轴向下，并且包围盒长宽均为单位1。很显然中心点就是 [0.5, 0.5] 。
+下面的例子会展示一些常用的用法。
+
+```python
+poco('bg_mission').focus('center').click()  # click the center
+```
+将 focus 和 drag_to 结合使用还能产生卷动(scroll)的效果，下面例子展示了如何将一个列表向上卷动半页。
+
+
+```python
+scrollView = poco(type='ScollView')
+scrollView.focus([0.5, 0.8]).drag_to(scrollView.focus([0.5, 0.2]))
+```
+
+### 17.单元测试(Unit Test)
+Poco是自动化测试框架，不负责单元测试部分。如果想要进行系统地管理你的测试或编写更高级的测试代码，请参考我们的单元测试部分 [PocoUnit](https://github.com/AirtestProject/PocoUnit). 
+PocoUnit是一个提供了完善设施的专门为游戏和应用设计的单元测试框架，用法与python标准库 unittest 完全兼容。
+
+```python
+```
+
+
+### 18.相关属于
+
+![image](https://user-images.githubusercontent.com/19643260/152799870-728dc822-a368-465e-9bfa-931191105490.png)
+
+![image](https://user-images.githubusercontent.com/19643260/152800088-609ed486-3c7f-4f65-9680-e2904b2d432c.png)
+
+![image](https://user-images.githubusercontent.com/19643260/152800114-f0fdff12-12c2-4ac5-9e5f-0731813652d1.png)
+
+
+### 19.坐标系与度量空间定义
+
+归一化坐标系就是将屏幕宽和高按照单位一来算，这样UI在poco中的宽和高其实就是相对于屏幕的百分比大小了，好处就是不同分辨率设备之间，同一个UI的归一化坐标系下的位置和尺寸是一样的，有助于编写跨设备测试用例。
+
+归一化坐标系的空间是均匀的，屏幕正中央一定是(0.5, 0.5)，其他标量和向量的计算方法同欧式空间。
+
+![image](https://user-images.githubusercontent.com/19643260/152800245-d052ba9a-3ce2-4ebc-9659-7895f0bb1344.png)
+
+
+### 20.局部坐标系(Local Coordinate System (local positioning))
+
+引入局部坐标系是为了表示相对于某UI的坐标。局部坐标系以UI包围盒左上角为原点，向右为x轴，向下为y轴，包围盒宽和高均为单位一。其余的定义和归一化坐标系类似。
+
+局部坐标系可以更灵活地定位UI内或外的位置，例如(0.5, 0.5)就代表UI的正中央，超过1或小于0的坐标值则表示UI的外面。
+
+
+
+### 21.
+```python
+```
+
+
+### 22.
+```python
+```
+
+
+### 23.
+```python
+```
