@@ -127,7 +127,7 @@ if poco(text="账号密码登录").exists():
         logger.info("退出登录失败")
 ```
 
-
+assert_exists(Template(r"tpl1644214986329.png", record_pos=(-0.108, -0.476), resolution=(1440, 2960)), "请填写测试点")
 ### 获取屏幕大小
 ```python
 screen_size=poco.get_screen_size()
@@ -175,7 +175,7 @@ poco.device..wake()
 
 ## 注意事项：
 
-### 1.断处理断言失败
+### 1.断处理失败
 不论是airtest提供的断言接口，还是Airtest-selenium提供的断言接口，如果断言失败，都会引发AssertionError，从而导致脚本执行终止；
 如果不想脚本因为一个断言失败就终止，可以将断言用try语句包起来
 
@@ -447,10 +447,20 @@ t1 = time.time()
 print t1 - t0  # 约50 ~ 60 s
 ```
 
-### 9.
+### 9.生成html报告
+```python
+from airtest.report.report import simple_report
+simple_report(__file__, logpath=True)
+```
 
+### 10.断言
 
-### 10.
+```python
+assert_exists(图片, "请填写测试点")
+assert_not_exists(图片, "请填写测试点")
+assert_equal("实际值", "预测值", "请填写测试点.")
+assert_not_equal("实际值", "预测值", "请填写测试点.")
+```
 
 
 ### 11.
